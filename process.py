@@ -1,3 +1,4 @@
+import gc
 import base64
 import cv2
 import numpy as np
@@ -83,11 +84,14 @@ def masks_segmentation(img: np.ndarray) -> Results:
     plt.tight_layout()
 
     # 9) Serialize figure to JPEG in memory and encode as Base64
-    buffer = BytesIO()
-    fig.savefig(buffer, format='jpg', bbox_inches='tight', pad_inches=0)
-    buffer.seek(0)
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        # 9) Serialize figure to JPEG in memory and encode as Base64
+    with BytesIO() as buffer:
+        fig.savefig(buffer, format='jpg', bbox_inches='tight', pad_inches=0)
+        buffer.seek(0)
+        img_b64 = base64.b64encode(buffer.read()).decode('utf-8')
+
     plt.close(fig)
+    gc.collect()
 
     # 10) Translate class IDs to names
     class_name = [_model.names[cls] for cls in detected_classes]

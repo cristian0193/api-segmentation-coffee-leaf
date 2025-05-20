@@ -8,6 +8,9 @@ from typing import List
 
 app = FastAPI(title="API de Base64")
 
+port = int(os.environ.get("PORT", 8000))
+app.run("main:app", host="0.0.0.0", port=port)
+
 class SegmentationRequest(BaseModel):
     image_base64: str
 
