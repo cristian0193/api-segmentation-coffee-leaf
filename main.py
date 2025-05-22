@@ -5,21 +5,22 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from ultralytics import YOLO
-from typing import List, Dict, Sequence
+from typing import List, Dict, Sequence, Any
 
-app = FastAPI(title="API de Base64")
-
+app = FastAPI(
+    title="YOLO Segmentation API",
+    description="API encargada de recibir una imagen en formato Base64 y, mediante el modelo YOLO, realizar la segmentación por instancia de enfermedades presentes en hojas de café."
+)
 
 class SegmentationRequest(BaseModel):
     image_base64: str
 
-
 class SegmentationResponse(BaseModel):
-    image_base64: str
+    segmentation_base64: str
     classes: List[str]
+    speed: Dict[str, float]
 
-
-@app.post("/segmentation", response_model=SegmentationResponse, status_code=200)
+@app.post("/segment-base64-image", response_model=SegmentationResponse, status_code=200)
 def decode_image(req: SegmentationRequest):
     """
     Decode a Base64-encoded image, perform segmentation, and return the
@@ -59,8 +60,9 @@ def decode_image(req: SegmentationRequest):
 
         # Step 4: Build and return the response
         return SegmentationResponse(
-            image_base64=result.image_base64,
-            classes=result.classes
+            segmentation_base64=result.image_base64,
+            classes=result.classes,
+            speed=result.speed
         )
 
     except Exception as e:
@@ -70,6 +72,7 @@ def decode_image(req: SegmentationRequest):
 class Results(BaseModel):
     image_base64: str
     classes: List[str]
+    speed: Dict[str, float]
 
 
 # Load the model once
@@ -140,7 +143,8 @@ def masks_segmentation(img: np.ndarray) -> Results:
 
     return Results(
         image_base64=img_b64,
-        classes=class_names
+        classes=class_names,
+        speed=res.speed
     )
 
 
